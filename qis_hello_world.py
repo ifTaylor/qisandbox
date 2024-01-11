@@ -16,8 +16,13 @@ The four steps to writing a quantum program:
 
 
 class HelloQuantum:
-    def __init__(self):
-        pass
+    def __init__(
+        self,
+        simulated,
+        show_circuit
+    ):
+        self.simulated = simulated
+        self.show_circuit = show_circuit
 
     def bell_state(self):
         """
@@ -29,6 +34,7 @@ class HelloQuantum:
         which is a specific two-qubit, entangled state.
 
         """
+        print('Building circuit.')
         # Create a circuit with two qubits
         qc = QuantumCircuit(2)
 
@@ -39,34 +45,36 @@ class HelloQuantum:
         qc.cx(0, 1)
 
         # Draw the circuit using matplotlib
-        qc.draw(output='mpl', style='clifford')
-        plt.show()
+        if self.show_circuit:
+            qc.draw(output='mpl', style='clifford')
+            plt.show() if self.show_circuit else None
 
         return qc
 
     def pauli(self):
         """
-        Step 1: cont...
+        Create two-qubit Pauli operators.
 
-        This code creates teh two-qubit Pauli operator Z on qubit 0 and
-        Z on qubit 1. If the state is entangled, the correlation between
-        the two qubits is 1.
+        This method creates the following two-qubit Pauli operators:
 
+        - ZZ: Represents the Pauli Z operator acting on qubit 1 and qubit 2 simultaneously.
+        - ZI: Represents the Pauli Z operator acting only on qubit 1.
+        - IZ: Represents the Pauli Z operator acting only on qubit 2.
+        - XX: Represents the Pauli X operator acting on both qubit 1 and qubit 2 simultaneously.
+        - XI: Represents the Pauli X operator acting only on qubit 1.
+        - IX: Represents the Pauli X operator acting only on qubit 2.
+
+        If the state is entangled, the correlation between the two qubits is 1.
+
+        :return: Dictionary containing Pauli operators.
         """
-        ZZ = Pauli('ZZ')
-        ZI = Pauli('ZI')
-        IZ = Pauli('IZ')
-        XX = Pauli('XX')
-        XI = Pauli('XI')
-        IX = Pauli('IX')
-
-        return {
-            'ZZ': ZZ,
-            'ZI': ZI,
-            'IZ': IZ,
-            'XX': XX,
-            'XI': XI,
-            'IX': IX
+        self.pauli_observables = {
+            'ZZ': Pauli('ZZ'),
+            'ZI': Pauli('ZI'),
+            'IZ': Pauli('IZ'),
+            'XX': Pauli('XX'),
+            'XI': Pauli('XI'),
+            'IX': Pauli('IX')
         }
 
     """
@@ -80,7 +88,6 @@ class HelloQuantum:
             self,
             service,
             circuit,
-            pauli
     ):
         """
         Step 3: Execute using a quantum primitive function.
@@ -90,10 +97,14 @@ class HelloQuantum:
         here.
 
         """
-        backend = service.least_busy(
-            simulator=False,
-            operational=True
-        )
+        print(f'Building backend, simulated: {self.simulated}')
+        if not self.simulated:
+            backend = service.least_busy(
+                simulator=False,
+                operational=True
+            )
+        else:
+            backend = service.get_backend('ibmq_qasm_simulator')
 
         options = Options()
         options.resilience_level = 1
@@ -104,23 +115,28 @@ class HelloQuantum:
             options=options
         )
 
+        print(f'Estimator circuits: {estimator}')
+
         job = estimator.run(
             circuits=[circuit]*6,
             observables=[
-                pauli['ZZ'],
-                pauli['ZI'],
-                pauli['IZ'],
-                pauli['XX'],
-                pauli['XI'],
-                pauli['IX']
+                self.pauli_observables['ZZ'],
+                self.pauli_observables['ZI'],
+                self.pauli_observables['IZ'],
+                self.pauli_observables['XX'],
+                self.pauli_observables['XI'],
+                self.pauli_observables['IX']
             ],
             shots=5000
         )
 
+        print(f'Job id: {job.job_id()}')
+
         return job
 
     def visualize(self, job):
-        data = ['IZ', 'IX', 'ZI', 'XI', 'ZZ', 'XX']
+        observables = list(self.pauli_observables.keys())
+        print(f'Starting result, with settings: {observables}')
         values = job.result().values
 
         # Error bars
@@ -128,28 +144,32 @@ class HelloQuantum:
         for case in job.result().metadata:
             error.append(2*np.sqrt(case['variance']/case['shots']))
 
-        plt.plot(data, values)
-        plt.errorbar(data, values, yerr=error, fmt='o')
+        plt.plot(observables, values)
+        plt.errorbar(observables, values, yerr=error, fmt='o')
         plt.xlabel('Observables')
         plt.ylabel('Values')
         plt.show()
 
 
 if __name__ == '__main__':
-    hello = HelloQuantum()
+    hello = HelloQuantum(
+        simulated=True,
+        show_circuit=False
+    )
 
     # Step 1: Map the problem to a quantum-native format.
     circuit = hello.bell_state()
-    pauli = hello.pauli()
+    hello.pauli()
 
     # Step 3: Execute using a quantum primitive function.
+    print('Starting IBM service...')
     service_builder = QisServiceBuilder()
     service = service_builder.auth()
+    print(f'Service(s): {service.instances()}')
 
     estimate_sample = hello.get_output_sample(
         service,
-        circuit,
-        pauli
+        circuit
     )
 
     # Step 4: Analyze the results.
