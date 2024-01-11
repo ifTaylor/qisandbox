@@ -1,0 +1,4 @@
+__pychache__/
+venv/
+csvs/
+plc_interface_timing.csv/
