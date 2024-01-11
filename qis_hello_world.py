@@ -51,16 +51,21 @@ class HelloQuantum:
 
         return qc
 
-    def pauli(self):
+    def pauli(
+            self,
+            observables
+    ):
         """
         Create two-qubit Pauli operators.
 
         This method creates the following two-qubit Pauli operators:
 
-        - ZZ: Represents the Pauli Z operator acting on qubit 1 and qubit 2 simultaneously.
+        - ZZ: Represents the Pauli Z operator acting on qubit 1 and
+            qubit 2 simultaneously.
         - ZI: Represents the Pauli Z operator acting only on qubit 1.
         - IZ: Represents the Pauli Z operator acting only on qubit 2.
-        - XX: Represents the Pauli X operator acting on both qubit 1 and qubit 2 simultaneously.
+        - XX: Represents the Pauli X operator acting on both qubit 1
+            and qubit 2 simultaneously.
         - XI: Represents the Pauli X operator acting only on qubit 1.
         - IX: Represents the Pauli X operator acting only on qubit 2.
 
@@ -69,12 +74,7 @@ class HelloQuantum:
         :return: Dictionary containing Pauli operators.
         """
         self.pauli_observables = {
-            'ZZ': Pauli('ZZ'),
-            'ZI': Pauli('ZI'),
-            'IZ': Pauli('IZ'),
-            'XX': Pauli('XX'),
-            'XI': Pauli('XI'),
-            'IX': Pauli('IX')
+            observable: Pauli(observable) for observable in observables
         }
 
     """
@@ -85,48 +85,42 @@ class HelloQuantum:
     """
 
     def get_output_sample(
-            self,
-            service,
-            circuit,
+        self,
+        service,
+        circuit,
+        observables
     ):
         """
-        Step 3: Execute using a quantum primitive function.
+        Execute a quantum primitive function and return a sample of results.
 
-        This code returns a sample of results. Quantum computers can
-        product random results. Estimator is the primitive function used
-        here.
+        This method uses the Estimator primitive function to obtain results
+        from a quantum computer or simulator.
 
+        :param service: Quantum service instance.
+        :param circuit: Quantum circuit to be executed.
+        :return: Quantum job containing the results.
         """
         print(f'Building backend, simulated: {self.simulated}')
-        if not self.simulated:
-            backend = service.least_busy(
-                simulator=False,
-                operational=True
-            )
-        else:
-            backend = service.get_backend('ibmq_qasm_simulator')
+
+        backend = (
+            service.least_busy(simulator=False, operational=True)
+            if not self.simulated
+            else service.get_backend('ibmq_qasm_simulator')
+        )
 
         options = Options()
         options.resilience_level = 1
         options.optimization_level = 3
 
-        estimator = Estimator(
-            backend,
-            options=options
-        )
+        estimator = Estimator(backend, options=options)
 
         print(f'Estimator circuits: {estimator}')
 
+        observables = [self.pauli_observables[name] for name in observables]
+
         job = estimator.run(
-            circuits=[circuit]*6,
-            observables=[
-                self.pauli_observables['ZZ'],
-                self.pauli_observables['ZI'],
-                self.pauli_observables['IZ'],
-                self.pauli_observables['XX'],
-                self.pauli_observables['XI'],
-                self.pauli_observables['IX']
-            ],
+            circuits=[circuit] * 6,
+            observables=observables,
             shots=5000
         )
 
@@ -159,7 +153,9 @@ if __name__ == '__main__':
 
     # Step 1: Map the problem to a quantum-native format.
     circuit = hello.bell_state()
-    hello.pauli()
+
+    observables = ['ZZ', 'ZI', 'IZ', 'XX', 'XI', 'IX']
+    hello.pauli(observables)
 
     # Step 3: Execute using a quantum primitive function.
     print('Starting IBM service...')
@@ -169,7 +165,8 @@ if __name__ == '__main__':
 
     estimate_sample = hello.get_output_sample(
         service,
-        circuit
+        circuit,
+        observables
     )
 
     # Step 4: Analyze the results.
