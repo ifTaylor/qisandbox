@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import Pauli
 from qiskit_ibm_runtime import Estimator, Options
-from runtime_service import QisServiceBuilder
+from services.runtime_service import QisServiceBuilder
 import numpy as np
 
 """
