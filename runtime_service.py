@@ -1,5 +1,4 @@
 import os
-from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit import QuantumCircuit
 from qiskit_ibm_runtime import QiskitRuntimeService, Sampler
 
