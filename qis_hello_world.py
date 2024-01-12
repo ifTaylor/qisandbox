@@ -159,7 +159,9 @@ if __name__ == '__main__':
 
     # Step 3: Execute using a quantum primitive function.
     print('Starting IBM service...')
-    service_builder = QisServiceBuilder()
+    service_builder = QisServiceBuilder(
+        simulated=hello.simulated
+    )
     service = service_builder.auth()
     print(f'Service(s): {service.instances()}')
 

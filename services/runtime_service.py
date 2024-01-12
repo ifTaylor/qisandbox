@@ -4,8 +4,11 @@ from qiskit_ibm_runtime import QiskitRuntimeService, Sampler
 
 
 class QisServiceBuilder:
-    def __init__(self):
-        pass
+    def __init__(
+        self,
+        simulated
+    ):
+        self.simulated = simulated
 
     def auth(self):
         """
@@ -14,10 +17,12 @@ class QisServiceBuilder:
         Returns:
             QiskitRuntimeService: The Qiskit Runtime service.
         """
-        return QiskitRuntimeService(
+        self.service = QiskitRuntimeService(
             channel="ibm_quantum",
             token=os.environ.get('IBM_QUANTUM_TOKEN')
         )
+
+        return self.service
 
     def auth_lib(self):
         """
@@ -27,13 +32,13 @@ class QisServiceBuilder:
         Returns:
             QiskitRuntimeService: The initialized Qiskit Runtime service.
         """
-        QiskitRuntimeService.save_account(
+        self.service = QiskitRuntimeService.save_account(
             channel="ibm_quantum",
             token=os.environ.get('IBM_QUANTUM_TOKEN'),
             set_as_default=True
         )
 
-        return QiskitRuntimeService()
+        return self.service
 
     def get_status(self, service):
         """
@@ -58,6 +63,16 @@ class QisServiceBuilder:
             'job_id': job.job_id(),
             'result': result
         }
+
+    def start_backend(self):
+        return (
+            self.service.least_busy(
+                simulator=self.simulated,
+                operational=True
+            )
+            if not self.simulated
+            else self.service.get_backend('ibmq_qasm_simulator')
+        )
 
 
 if __name__ == '__main__':
