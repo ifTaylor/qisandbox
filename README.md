@@ -10,12 +10,12 @@ https://docs.quantum.ibm.com/start/hello-world
 https://docs.quantum.ibm.com/build
     - Construct circuits:
     https://docs.quantum.ibm.com/build/circuit-construction
+    - Operator's module overview:
+    https://docs.quantum.ibm.com/build/operators-overview
 
 ## Next Step(s):
 - Introduction:
 https://docs.quantum.ibm.com/build
-    - Operator's module overview:
-    https://docs.quantum.ibm.com/build/operators-overview
     - Circuit library:
     https://docs.quantum.ibm.com/build/circuit-library
     - Pulse schedules:
