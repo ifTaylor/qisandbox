@@ -13,6 +13,11 @@ https://docs.quantum.ibm.com/build
     - Operator's module overview:
     https://docs.quantum.ibm.com/build/operators-overview
 
+- Tutorials:
+https://learning.quantum.ibm.com/catalog/tutorials
+    - Glover's algorithm:
+    https://learning.quantum.ibm.com/tutorial/grovers-algorithm
+
 ## Next Step(s):
 - Introduction:
 https://docs.quantum.ibm.com/build
@@ -25,8 +30,6 @@ https://docs.quantum.ibm.com/build
 
 - Tutorials:
 https://learning.quantum.ibm.com/catalog/tutorials
-    - Glover's algorithm:
-    https://learning.quantum.ibm.com/tutorial/grovers-algorithm
     - CHSH inequality:
     https://learning.quantum.ibm.com/tutorial/chsh-inequality
 
