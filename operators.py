@@ -70,7 +70,6 @@ circuit.h(0)
 for j in range(1, 10):
     circuit.cx(j - 1, j)
 circuit.draw(output='mpl', style='clifford')
-plt.show()
 hadamard_cnot_op = Operator(circuit)
 print(hadamard_cnot_op)
 
@@ -86,16 +85,91 @@ circuit = QuantumCircuit(2, 2)
 circuit.append(XX, [0, 1])
 circuit.measure([0, 1], [0, 1])
 circuit.draw(output='mpl', style='clifford')
-plt.show()
+
 
 # Syntax simplified
 circuit = QuantumCircuit(2, 2)
 circuit.append(Pauli('XX'), [0, 1])
 circuit.measure([0, 1], [0, 1])
 circuit.draw(output='mpl', style='clifford')
-plt.show()
+
 
 """
 Combining operators
 
 """
+
+# Tensor product
+# Cross product of two, two qubit Pauli operators
+A = Operator(Pauli('X'))
+print(F'Operator A: {A}')
+B = Operator(Pauli('Z'))
+print(F'Operator B: {B}')
+# A cross B
+AxB = A.tensor(B)
+print(f'A cross B prod: {AxB}')
+
+# Tensor expansion
+# B cross A (same output for both)
+BxA_expand = A.expand(B)
+print(f'AB expand: {BxA_expand}')
+BxA_prod = B.tensor(A)
+print(f'B cross A prod: {BxA_prod}')
+
+# Composition
+# Matrix multiplication
+AB = A.compose(B)
+print(f'A * B: {AB}')
+
+# Reverse composition
+# Multiply B before A (non symmetric in q world)
+BA_rev = A.compose(B, front=True)
+print(f'B * A: {BA_rev}')
+
+# Subsystem composition
+op = Operator(np.eye(2 ** 3))
+XZ = Operator(Pauli('XZ'))
+opXZ = op.compose(XZ, qargs=[0, 2])
+print(f'opXZ: {opXZ}')
+
+YX = Operator(Pauli('YX'))
+opYX = op.compose(YX, qargs=[0, 2], front=True)
+print(f'opYX: {opYX}')
+
+# Linear combinations
+# Subject to arithmetic and scalar multiplication by complex numbers
+XX = Operator(Pauli('XX'))
+YY = Operator(Pauli('YY'))
+ZZ = Operator(Pauli('ZZ'))
+
+op = 0.5 * (XX + YY - 3 * ZZ)
+print(f'op: {op}')
+
+# Check if unitary
+print(f'Check for unitary: {op.is_unitary()}')
+
+"""
+Comparison of Operators
+
+"""
+
+
+def equal(op1, op2):
+    return op1 == op2
+
+
+# Equality method to check if two operators are approximately equal
+print(equal(Operator(Pauli('X')), Operator(XGate())))
+print(equal(Operator(Pauli('X')), np.exp(1j * 0.5) * Operator(XGate())))
+
+# Process fidelity
+op_a = Operator(XGate())
+op_b = np.exp(1j * 0.5) * Operator(XGate())
+
+# Compute process fidelity
+# Theoretic quantity for how close two quantum channels are.
+F = process_fidelity(op_a, op_b)
+print('Process fidelity =', F)
+
+
+plt.show()
